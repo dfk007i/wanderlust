@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Define the SonarQube environment variable
-        SONARQUBE_ENV = 'Sonar' // Replace 'SonarQube' with your actual SonarQube configuration name in Jenkins
+        SONARQUBE_ENV = 'Sonar' // Replace 'Sonar' with your actual SonarQube configuration name in Jenkins
     }
 
     stages {
@@ -40,6 +40,13 @@ pipeline {
                     // Run the SonarQube scanner
                     sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=wanderlust -Dsonar.projectName=wanderlust"
                 }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                // Deploy the application using Docker Compose
+                sh 'docker-compose up -d'
             }
         }
     }
