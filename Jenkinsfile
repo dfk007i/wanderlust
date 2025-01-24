@@ -43,10 +43,10 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy using Docker Compose') {
             steps {
-                // Deploy the application using Docker Compose
-                sh 'docker-compose up -d'
+                // Deploy the application using Docker Compose V2 command
+                sh 'docker compose up -d --build'
             }
         }
     }
