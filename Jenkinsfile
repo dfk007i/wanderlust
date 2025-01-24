@@ -1,43 +1,61 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        SONAR_HOME= tool "Sonar"
+
+    environment {
+        // Define the SonarQube environment variable
+        SONARQUBE_ENV = 'Sonar' // Replace 'SonarQube' with your actual SonarQube configuration name in Jenkins
     }
-    stages{
-        stage("Clone Code from GitHub"){
-            steps{
-                git url: "https://github.com/dfk007i/wanderlust.git", branch: "devops"
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Clone the GitHub repository
+                git url: 'https://github.com/dfk007i/wanderlust.git', branch: 'devops'
             }
         }
-        stage("SonarQube Quality Analysis"){
-            steps{
-                withSonarQubeEnv("Sonar"){
-                    sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=wanderlust -Dsonar.projectKey=wanderlust"
+
+        stage('Build') {
+            steps {
+                // Build the project (replace with your actual build command)
+                sh 'echo "Building the project..."'
+                // Example: sh './build.sh'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests (replace with your actual test command)
+                sh 'echo "Running tests..."'
+                // Example: sh './test.sh'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            environment {
+                // Inject SonarQube environment variables
+                scannerHome = tool name: 'SonarQube Scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+            }
+            steps {
+                withSonarQubeEnv(SONARQUBE_ENV) {
+                    // Run the SonarQube scanner
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=wanderlust -Dsonar.projectName=wanderlust"
                 }
             }
         }
-        stage("OWASP Dependency Check"){
-            steps{
-                dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'Owasp'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
+    }
+
+    post {
+        always {
+            // Clean up workspace
+            cleanWs()
         }
-        stage("Sonar Quality Gate Scan"){
-            steps{
-                timeout(time: 2, unit: "MINUTES"){
-                    waitForQualityGate abortPipeline: false
-                }
-            }
+        success {
+            // Notify success
+            echo 'Pipeline succeeded!'
         }
-        stage("Trivy File System Scan"){
-            steps{
-                sh "trivy fs --format  table -o trivy-fs-report.html ."
-            }
-        }
-        stage("Deploy using Docker compose"){
-            steps{
-                sh "docker-compose up -d"
-            }
+        failure {
+            // Notify failure
+            echo 'Pipeline failed!'
         }
     }
 }
